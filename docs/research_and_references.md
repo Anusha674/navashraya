@@ -10,7 +10,7 @@
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                      PRIMARY GEO-SPATIAL DATASETS                        │
+│                      PRIMARY GEO-SPATIAL DATASETS                       │
 │   • ISRO Bhuvan (LULC, Cartosat DEM)   • GSI Landslide Inventory        │
 │   • Survey of India (SOI Boundaries)   • Census 2011 Population Data    │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -18,8 +18,8 @@
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    PREDICTIVE MACHINE LEARNING                          │
-│   • Random Forest Classifier (Terrain Factors: Slope, TWI, Aspect)     │
-│   • Multi-Hazard Risk Aggregation: Risk = Hazard × Exposure × Vuln     │
+│   • Random Forest Classifier (Terrain Factors: Slope, TWI, Aspect)      │
+│   • Multi-Hazard Risk Aggregation: Risk = Hazard × Exposure × Vuln      │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼

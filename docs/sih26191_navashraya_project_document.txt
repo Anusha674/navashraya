@@ -1,0 +1,158 @@
+SMART INDIA HACKATHON (SIH26191) PROJECT DOCUMENTATION
+
+PROBLEM STATEMENT TITLE:
+Intelligent Identification of Hazard-Based Red Zones, Carrying Capacity 
+Assessment, and Immediate Relocation Needs for Vulnerable Habitations
+
+PROJECT NAME: NAVASHRAYA
+MOTTO: Safe Today, Stronger Tomorrow
+TARGET ORGANIZATIONS: Ministry of Home Affairs (MHA), NDRF, KSDMA
+PILOT REGION: Wayanad District, Kerala, India
+
+
+1. EXECUTIVE SUMMARY
+
+NAVASHRAYA is an end to end intelligent decision support platform designed to 
+address SIH Problem Statement 26191. The system automates multi-hazard risk 
+assessment, red-zone identification, carrying capacity calculations, and 
+optimal habitation relocation routing for disaster management authorities.
+
+By combining remote sensing data (ISRO Bhuvan, Cartosat DEM), historical 
+landslide inventories (Geological Survey of India), machine learning risk 
+fusion, Multi-Criteria Decision Making (AHP + TOPSIS), and Explainable AI (SHAP), 
+NAVASHRAYA enables proactive, data-driven relocation of vulnerable habitations 
+before disasters strike.
+
+
+2. PROBLEM CONTEXT & CHALLENGES
+
+Recent extreme rainfall events in ecologically sensitive regions like the 
+Western Ghats (e.g., Chooralmala and Mundakkai in Wayanad, Kerala) have 
+highlighted critical operational gaps in conventional disaster management:
+
+1. Reactive vs. Proactive Relocation: Existing emergency responses focus heavily 
+   on post-disaster rescue rather than pre disaster planned relocation.
+2. Isolated Hazard Assessments: Landslide susceptibility, flood plain exposure, 
+   and population vulnerability are often evaluated in silos rather than as an 
+   integrated multi hazard risk index.
+3. Destination Overcrowding: Relocating affected populations without carrying 
+   capacity analysis risks overloading infrastructure and creating new 
+   vulnerabilities at resettlement sites.
+4. Model Transparency Deficit: Traditional ML models act as "black boxes", 
+   making field officers hesitant to act without clear feature attributions.
+
+
+3. SYSTEM ARCHITECTURE & CORE MODULES
+
+NAVASHRAYA is structured into six integrated modules:
+
+MODULE 1: GIS Spatial Red-Zone Identification
+- Extracts spatial parameters (Slope, Aspect, Elevation, Stream Proximity, Road Cut 
+  Proximity, TWI) using PostGIS and GeoPandas.
+- Intersects Survey of India (SOI) administrative village boundaries with GSI 
+  landslide polygons and KSDMA flood plain layers.
+
+MODULE 2: Predictive AI/ML Hazard & Risk Fusion
+- Supervised Machine Learning: Trains a 100 tree Random Forest Classifier on 
+  spatial conditioning factors to predict landslide susceptibility (0-100%).
+- Risk Fusion Engine: Integrates landslide score and flood plain exposure % 
+  into a composite Multi-Hazard Score.
+
+MODULE 3: Carrying Capacity & Usable Land Assessment
+- Computes net safe usable land area for candidate relocation sites.
+- Evaluates population capacity limits against Census 2011 demographic data 
+  and housing/infrastructure requirements.
+
+MODULE 4: AHP + TOPSIS Multi-Criteria Site Ranking
+- Analytic Hierarchy Process (AHP): Derives objective criterion weights (Safety 60%, 
+  Proximity 25%, Capacity 15%) with Consistency Ratio CR < 0.10.
+- TOPSIS Optimization: Calculates relative closeness vectors (Ci*) to rank 
+  safe destination villages and define relocation corridors.
+
+MODULE 5: Explainable AI (SHAP) & Scenario Simulation
+- SHAP Attributions: Computes Shapley values to explain local feature impacts 
+  (e.g., Slope Angle +0.24, Rainfall +0.16) for red zone habitations.
+- Extreme Monsoon Simulation: Interactive +25% extreme rainfall escalation 
+  toggle to stress-test hazard zones and observe safety score changes.
+
+MODULE 6: Executive Decision Support & Report Generator
+- Interactive GIS Map: Leaflet powered visual map displaying affected source 
+  villages in RED, recommended safe destinations in GREEN, and relocation 
+  corridors as BLUE dashed routes.
+- PDF Decision Report: Instant formal decision directive generation ready for 
+  printing and official administrative validation.
+
+
+4. KEY MATHEMATICAL FORMULAS (SIMPLE HUMAN-READABLE FORMAT)
+
+1. DISASTER RISK FRAMEWORK (UNDRR Standard):
+   Risk = Hazard × Exposure × Vulnerability
+
+2. MULTI-HAZARD FUSION SCORE:
+   Multi-Hazard Score = (0.50 × Landslide Score) + (0.50 × Flood Exposure %)
+   - High Hazard: Score >= 30
+   - Moderate Hazard: Score 20 to 29.9
+   - Low Hazard: Score < 20
+
+3. SAFE RELOCATION RANKING SCORE (AHP + TOPSIS):
+   Relocation Score = (0.60 × Safety Score) + (0.25 × Proximity Score) + 15
+   - Proximity Score = max(0, 100 - 5 × Distance in km)
+
+4. DESTINATION CARRYING CAPACITY:
+   Available Capacity = (Usable Safe Land Area ÷ Land Required per Person) - Existing Population
+
+
+5. DATASETS & PROVENANCE REGISTRY
+
+1. ISRO Bhuvan (NRSC / ISRO):
+   - Cartosat-1 30m DEM & ALOS PALSAR Datasets for elevation, slope, and TWI.
+   - 1:50,000 Land Use / Land Cover (LULC) maps & satellite flood inundation overlays.
+2. Geological Survey of India (GSI):
+   - National Landslide Susceptibility Mapping (NLSM) 1:50,000 scale vector inventory.
+3. Survey of India (SOI):
+   - Official administrative village MultiPolygon boundaries (EPSG:4326 / UTM 43N).
+4. Census of India:
+   - Primary Census Abstract 2011 population data for Wayanad district.
+5. Kerala State Disaster Management Authority (KSDMA):
+   - KSDMP state hazard maps, flood plain layers, and monsoon trigger scenario parameters.
+
+
+6. TECHNICAL STACK
+
+- Backend API: FastAPI (Python 3.12), Uvicorn, Pydantic
+- Database / Spatial GIS: PostGIS (PostgreSQL), GeoPandas, PyProj, Shapely
+- Machine Learning & XAI: Scikit learn (RandomForestClassifier), Joblib, SHAP
+- Frontend Interface: HTML5, Vanilla CSS3 (Green & White Theme), JavaScript (ES6+)
+- Mapping Engine: Leaflet.js, OpenStreetMap Carto tiles
+
+
+7. SOCIAL IMPACT & OPERATIONAL VALUE
+
+- Life-Saving Proactive Resettlement: Identifies vulnerable habitations before 
+  monsoon landslides occur, allowing planned evacuation and resettlement.
+- Carrying Capacity Protection: Prevents destination overcrowding and ensures 
+  resettlement sites have adequate infrastructure and safe land.
+- Transparent AI Governance: Empowers disaster response commanders (NDRF/KSDMA) 
+  with explainable SHAP metrics for confident decision-making.
+- Scalability: System design can be easily adapted to any mountain or flood-prone 
+  district in India using standard ISRO Bhuvan and SOI spatial layers.
+
+
+8. BIBLIOGRAPHIC REFERENCES
+
+1. ISRO Bhuvan Geo-Spatial Platform (2022). National Remote Sensing Centre (NRSC).
+   https://bhuvan.nrsc.gov.in
+2. Geological Survey of India (GSI) (2021). Landslide Susceptibility Mapping in 
+   Western Ghats, Kerala. https://www.gsi.gov.in
+3. Saaty, Thomas L. (1980). The Analytic Hierarchy Process: Planning, Priority Setting. 
+   McGraw-Hill, New York.
+4. Hwang, C.L. & Yoon, K. (1981). Multiple Attribute Decision Making: Methods and Applications. 
+   Springer-Verlag. DOI: 10.1007/978-3-642-48318-0
+5. UNDRR (2015). Sendai Framework for Disaster Risk Reduction 2015–2030.
+6. Lundberg, S.M. & Lee, S.I. (2017). A Unified Approach to Interpreting Model 
+   Predictions (SHAP). NeurIPS 30.
+7. KSDMA (2020). Kerala State Disaster Management Plan & Risk Profile.
+
+
+END OF DOCUMENTATION
+
