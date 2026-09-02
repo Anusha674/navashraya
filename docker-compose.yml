@@ -1,0 +1,19 @@
+services:
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: navashraya-postgres
+
+    environment:
+      POSTGRES_DB: navashraya
+      POSTGRES_USER: navashraya
+      POSTGRES_PASSWORD: navashraya
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

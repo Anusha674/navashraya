@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Virtual Environment
+backend/venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/app/api/__pycache__/
+backend/app/core/__pycache__/
+backend/app/gis/__pycache__/
+backend/app/ml/__pycache__/
+backend/app/schemas/__pycache__/
+backend/app/services/__pycache__/
+
+# Node / JS
+node_modules/
+npm-debug.log*
+
+# Database / Local artifacts
+*.sqlite3
+*.log

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAVASHRAYA — Safe Today, Stronger Tomorrow</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ================= OPENING SPLASH OVERLAY ================= -->
+    <div id="splashScreen" class="splash-overlay" onclick="closeSplash()">
+        <div class="splash-card">
+            <div class="splash-logo-ring">
+                <img src="logo.jpg" alt="NAVASHRAYA Logo" class="splash-logo">
+            </div>
+            <h1 class="splash-title">NAVASHRAYA</h1>
+            <p class="splash-motto">Safe Today, Stronger Tomorrow</p>
+            <div class="splash-bar">
+                <div class="splash-progress"></div>
+            </div>
+            <p class="splash-hint">Click anywhere or wait to enter dashboard...</p>
+        </div>
+    </div>
+
+
+    <!-- ================= HEADER NAVBAR ================= -->
+    <header class="navbar">
+        <div class="nav-wrapper">
+            <div class="nav-brand">
+                <img src="logo.jpg" alt="NAVASHRAYA Logo" class="nav-logo">
+                <div class="brand-text">
+                    <h1>NAVASHRAYA</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button class="nav-link active" onclick="showTab('dashboard')">Dashboard</button>
+                <button class="nav-link" onclick="openModal('methodologyModal')">Methodology</button>
+                <button class="nav-link" onclick="openModal('sourcesModal')">Data Sources</button>
+                <button class="nav-link" onclick="openModal('referencesModal')">References</button>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- ================= MAIN CONTAINER ================= -->
+    <main class="main-container">
+
+        <!-- Selection Panel -->
+        <section class="panel panel-search">
+            <div class="panel-header">
+                <h2>Habitation Risk & Relocation Assessment</h2>
+                <p class="panel-subtitle">Select a village to run multi-hazard risk analysis, SHAP model explainability, and carrying-capacity matched safe destination recommendations.</p>
+            </div>
+
+            <div class="search-form">
+                <select id="village" class="form-select">
+                    <option value="">Loading Wayanad villages...</option>
+                </select>
+                <button id="analyzeButton" class="btn btn-primary" onclick="analyzeVillage()">
+                    <span>Analyze Risk & Safe Destinations</span>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-panel">
+            <div class="spinner"></div>
+            <p>Processing PostGIS spatial metrics, multi-hazard fusion, and AHP/TOPSIS destination rankings...</p>
+        </div>
+
+
+        <!-- Error State -->
+        <div id="error" class="error-panel"></div>
+
+
+        <!-- Results Workspace -->
+        <div id="results" class="results-workspace">
+
+            <!-- Current Hazard Card -->
+            <section class="panel panel-hazard">
+                <div class="panel-header-flex">
+                    <div>
+                        <h2>Current Hazard Assessment</h2>
+                        <div id="hazardLevel" class="badge-hazard">-</div>
+                    </div>
+                    <div class="toolbar">
+                        <button id="scenarioBtn" class="btn btn-secondary" onclick="toggleScenario()">Rainfall Scenario (+25%)</button>
+                        <button class="btn btn-dark" onclick="generateReport()">Export Decision Report</button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <!-- Metric 1 -->
+                    <div class="metric-card">
+                        <div class="metric-head">
+                            <span class="metric-label">Exposed Population</span>
+                            <span class="tag tag-real">REAL DATA</span>
+                        </div>
+                        <div id="population" class="metric-val">-</div>
+                        <div class="metric-sub">Census 2011 Data</div>
+                    </div>
+
+                    <!-- Metric 2 -->
+                    <div class="metric-card">
+                        <div class="metric-head">
+                            <span class="metric-label">Flood Exposure Area</span>
+                            <span class="tag tag-derived">DERIVED</span>
+                        </div>
+                        <div id="flood" class="metric-val">-</div>
+                        <div class="metric-sub">Flood Plain Overlay %</div>
+                    </div>
+
+                    <!-- Metric 3 -->
+                    <div class="metric-card">
+                        <div class="metric-head">
+                            <span class="metric-label">Landslide Score</span>
+                            <span class="tag tag-derived">DERIVED</span>
+                        </div>
+                        <div id="landslide" class="metric-val">-</div>
+                        <div class="metric-sub">GSI Susceptibility Index</div>
+                    </div>
+
+                    <!-- Metric 4 -->
+                    <div class="metric-card highlight">
+                        <div class="metric-head">
+                            <span class="metric-label">Multi-Hazard Risk</span>
+                            <span class="tag tag-derived">DERIVED</span>
+                        </div>
+                        <div id="multihazard" class="metric-val">-</div>
+                        <div class="metric-sub">Composite Score (0-100)</div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- Interactive Map Panel -->
+            <section class="panel panel-map">
+                <div class="panel-header-flex">
+                    <div>
+                        <h2>GIS Relocation Corridor & Destination Map</h2>
+                        <span id="scenarioMapTag" class="map-scenario-tag" style="display:none;">Extreme Rainfall Scenario (+25%) Active</span>
+                    </div>
+                    <span class="geo-tag">EPSG:4326 / UTM 43N</span>
+                </div>
+
+                <div id="map"></div>
+
+                <div class="map-legend">
+                    <div class="legend-cell"><span class="dot affected"></span><span>Affected Source Village</span></div>
+                    <div class="legend-cell"><span class="dot destination"></span><span>Recommended Safe Destination</span></div>
+                    <div class="legend-cell"><span class="line route"></span><span>Relocation Corridor</span></div>
+                </div>
+            </section>
+
+
+            <!-- Recommended Destinations Panel -->
+            <section class="panel panel-recommendations">
+                <div class="panel-header-flex">
+                    <div>
+                        <h2>AHP + TOPSIS Recommended Safe Destinations</h2>
+                        <p class="panel-subtitle">Ranked by safety, carrying capacity, accessibility, and geodesic proximity.</p>
+                    </div>
+                    <div class="notice-chip">Notice: Recommendations require administrative & field validation</div>
+                </div>
+
+                <div id="recommendations" class="cards-grid"></div>
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- SHAP Modal -->
+    <div id="shapModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3>Explainable AI (SHAP) — Hazard Factor Breakdown</h3>
+                <span class="modal-close" onclick="closeModal('shapModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>SHAP (SHapley Additive exPlanations) tree values indicate feature contributions to the landslide susceptibility & risk classification for the selected village:</p>
+                <div id="shapListContainer" class="shap-list">
+                    <div class="shap-item">
+                        <span class="shap-name">Slope Angle (>35°)</span>
+                        <div class="shap-track"><div class="shap-fill" style="width: 80%;">+0.24</div></div>
+                    </div>
+                    <div class="shap-item">
+                        <span class="shap-name">GSI Historical Landslide</span>
+                        <div class="shap-track"><div class="shap-fill" style="width: 65%;">+0.19</div></div>
+                    </div>
+                    <div class="shap-item">
+                        <span class="shap-name">Antecedent Rainfall</span>
+                        <div class="shap-track"><div class="shap-fill" style="width: 55%;">+0.16</div></div>
+                    </div>
+                    <div class="shap-item">
+                        <span class="shap-name">Terrain Elevation</span>
+                        <div class="shap-track"><div class="shap-fill" style="width: 30%;">+0.08</div></div>
+                    </div>
+                    <div class="shap-item">
+                        <span class="shap-name">Road Cut Proximity</span>
+                        <div class="shap-track"><div class="shap-fill" style="width: 20%;">+0.05</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scenario Modal -->
+    <div id="scenarioModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3>What-If Extreme Rainfall Scenario Simulation</h3>
+                <span class="modal-close" onclick="closeModal('scenarioModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Simulate rainfall intensity escalation (+25% monsoon trigger) on Wayanad habitations:</p>
+                <div class="scenario-grid">
+                    <div class="scenario-card baseline">
+                        <h4>Baseline Scenario</h4>
+                        <p>Critical Habitats: <strong>12</strong></p>
+                        <p>High Hazard Villages: <strong>18</strong></p>
+                    </div>
+                    <div class="scenario-card escalated">
+                        <h4>+25% Escalation</h4>
+                        <p>Newly Affected: <strong>+7</strong></p>
+                        <p>Critical Habitats: <strong>19</strong></p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="toggleScenario(); closeModal('scenarioModal');">Toggle +25% Scenario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology Modal -->
+    <div id="methodologyModal" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="modal-head">
+                <h3>Research-Backed Decision Support Methodology</h3>
+                <span class="modal-close" onclick="closeModal('methodologyModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ol class="method-list">
+                    <li><strong>Multi-Source GIS Data:</strong> DEM, Survey of India village boundaries, GSI Landslide shapefiles, and KSDMA flood plain layers.</li>
+                    <li><strong>Predictive ML Hazard Modeling:</strong> Random Forest model trained on geo-environmental conditioning factors.</li>
+                    <li>
+                        <strong>Risk Aggregation Formula:</strong>
+                        <div class="formula-box">
+                            Risk Score = Hazard Score &times; Exposure Factor &times; Vulnerability Index
+                        </div>
+                    </li>
+                    <li><strong>AHP + TOPSIS Ranking:</strong> Pairwise criteria weighting and ideal vector closeness ranking for candidate relocation sites.</li>
+                    <li><strong>Carrying Capacity Matching:</strong> Net usable land calculation against housing and infrastructure requirements.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Sources Modal -->
+    <div id="sourcesModal" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="modal-head">
+                <h3>Data Sources & Provenance Registry</h3>
+                <span class="modal-close" onclick="closeModal('sourcesModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <table class="grid-table">
+                    <thead>
+                        <tr>
+                            <th>Dataset</th>
+                            <th>Source Organization</th>
+                            <th>Status</th>
+                            <th>Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Village Boundaries</td>
+                            <td>Survey of India (SOI)</td>
+                            <td><span class="tag tag-real">REAL DATA</span></td>
+                            <td>Administrative village geometry</td>
+                        </tr>
+                        <tr>
+                            <td>Landslide Inventory</td>
+                            <td>Geological Survey of India (GSI)</td>
+                            <td><span class="tag tag-real">REAL DATA</span></td>
+                            <td>Landslide susceptibility polygons</td>
+                        </tr>
+                        <tr>
+                            <td>Flood Plains</td>
+                            <td>KSDMA / State Water Dept</td>
+                            <td><span class="tag tag-real">REAL DATA</span></td>
+                            <td>Flood zone spatial overlay</td>
+                        </tr>
+                        <tr>
+                            <td>Village Population</td>
+                            <td>Census 2011 Data</td>
+                            <td><span class="tag tag-real">REAL DATA</span></td>
+                            <td>Official population count</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- References Modal -->
+    <div id="referencesModal" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="modal-head">
+                <h3>Scientific & Data References</h3>
+                <span class="modal-close" onclick="closeModal('referencesModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <ul class="ref-list">
+                    <li><strong>Geological Survey of India (2021)</strong> — <em>Landslide susceptibility mapping using Random Forest & GIS in Western Ghats, Kerala.</em></li>
+                    <li><strong>Thomas L. Saaty (1980)</strong> — <em>The Analytic Hierarchy Process: Planning, Priority Setting, Resource Allocation.</em> McGraw-Hill.</li>
+                    <li><strong>Hwang, C.L. & Yoon, K. (1981)</strong> — <em>Multiple Attribute Decision Making: Methods and Applications.</em> Springer-Verlag.</li>
+                    <li><strong>Lundberg, S.M. & Lee, S.I. (2017)</strong> — <em>A Unified Approach to Interpreting Model Predictions (SHAP).</em> NeurIPS 30.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decision Report Modal -->
+    <div id="reportModal" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="modal-head">
+                <h3>Executive Disaster Relocation Decision Report</h3>
+                <span class="modal-close" onclick="closeModal('reportModal')">&times;</span>
+            </div>
+            <div id="reportContent" class="modal-body print-area">
+                <!-- Dynamically Generated Report Content -->
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+                <button class="btn btn-secondary" onclick="closeModal('reportModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>

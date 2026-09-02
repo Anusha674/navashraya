@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Navashraya</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f9;
+            color: #1f2937;
+        }
+
+        header {
+            background: #173f35;
+            color: white;
+            padding: 25px 40px;
+        }
+
+        header h1 {
+            font-size: 32px;
+        }
+
+        header p {
+            margin-top: 6px;
+            opacity: 0.85;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .search-box label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        select {
+            flex: 1;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 13px 25px;
+            border: none;
+            border-radius: 7px;
+            background: #176b4d;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #12553e;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #results {
+            display: none;
+            margin-top: 25px;
+        }
+
+        .section-title {
+            margin: 25px 0 15px;
+        }
+
+        .hazard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .hazard-level {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat {
+            background: #f8fafc;
+            padding: 18px;
+            border-radius: 8px;
+        }
+
+        .stat-title {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .stat-value {
+            font-size: 23px;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+
+        .recommendations {
+            display: grid;
+            gap: 15px;
+        }
+
+        .destination {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .destination h3 {
+            margin-bottom: 10px;
+        }
+
+        .destination-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .destination-stat {
+            margin-top: 8px;
+        }
+
+        .suitable {
+            color: #176b4d;
+            font-weight: bold;
+        }
+
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 700px) {
+            .stats,
+            .destination-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Navashraya</h1>
+    <p>Intelligent Multi-Hazard Relocation System</p>
+</header>
+
+<div class="container">
+
+    <div class="search-box">
+
+        <label for="village">
+            Select affected village
+        </label>
+
+        <div class="search-row">
+
+            <select id="village">
+                <option value="">Loading villages...</option>
+            </select>
+
+            <button onclick="analyzeVillage()">
+                Analyze
+            </button>
+
+        </div>
+
+    </div>
+
+    <div id="loading">
+        Analyzing village...
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <div id="results">
+
+        <h2 class="section-title">
+            Current Hazard Assessment
+        </h2>
+
+        <div class="hazard-card">
+
+            <div id="hazardLevel" class="hazard-level"></div>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-title">Population</div>
+                    <div id="population" class="stat-value">-</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">Flood Exposure</div>
+                    <div id="flood" class="stat-value">-</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">Landslide Score</div>
+                    <div id="landslide" class="stat-value">-</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-title">Multi-Hazard Score</div>
+                    <div id="multihazard" class="stat-value">-</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <h2 class="section-title">
+            Recommended Destinations
+        </h2>
+
+        <div id="recommendations" class="recommendations"></div>
+
+    </div>
+
+</div>
+
+<script>
+
+const API = "http://127.0.0.1:8000";
+
+
+async function loadVillages() {
+
+    const select = document.getElementById("village");
+
+    try {
+
+        const response = await fetch(`${API}/api/villages`);
+
+        if (!response.ok) {
+            throw new Error("Could not load villages");
+        }
+
+        const villages = await response.json();
+
+        select.innerHTML =
+            '<option value="">Select a village</option>';
+
+        villages.forEach(village => {
+
+            const option = document.createElement("option");
+
+            option.value = village;
+            option.textContent = village;
+
+            select.appendChild(option);
+
+        });
+
+    } catch (error) {
+
+        select.innerHTML =
+            '<option value="">API not available</option>';
+
+    }
+}
+
+
+async function analyzeVillage() {
+
+    const village =
+        document.getElementById("village").value;
+
+    if (!village) {
+        alert("Please select a village.");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "block";
+
+    document.getElementById("results").style.display = "none";
+
+    document.getElementById("error").style.display = "none";
+
+    try {
+
+        const hazardResponse =
+            await fetch(
+                `${API}/api/village/${encodeURIComponent(village)}`
+            );
+
+        const relocationResponse =
+            await fetch(
+                `${API}/api/relocation/${encodeURIComponent(village)}`
+            );
+
+        if (!hazardResponse.ok ||
+            !relocationResponse.ok) {
+
+            throw new Error(
+                "Could not retrieve village data"
+            );
+        }
+
+        const hazard =
+            await hazardResponse.json();
+
+        const relocation =
+            await relocationResponse.json();
+
+
+        document.getElementById("hazardLevel").textContent =
+            `${hazard.village} — ${hazard.hazard_level} Risk`;
+
+        document.getElementById("population").textContent =
+            hazard.population ?? "N/A";
+
+        document.getElementById("flood").textContent =
+            `${hazard.flood_exposed_percent.toFixed(2)}%`;
+
+        document.getElementById("landslide").textContent =
+            hazard.landslide_score.toFixed(2);
+
+        document.getElementById("multihazard").textContent =
+            hazard.multihazard_score.toFixed(2);
+
+
+        const container =
+            document.getElementById("recommendations");
+
+        container.innerHTML = "";
+
+
+        relocation.recommendations.forEach(item => {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "destination";
+
+            card.innerHTML = `
+
+                <h3>
+                    ${getMedal(item.rank)}
+                    ${item.destination}
+                </h3>
+
+                <div class="destination-grid">
+
+                    <div class="destination-stat">
+                        <strong>Distance</strong><br>
+                        ${item.distance_km} km
+                    </div>
+
+                    <div class="destination-stat">
+                        <strong>Safety</strong><br>
+                        ${item.safety_score.toFixed(2)}
+                    </div>
+
+                    <div class="destination-stat">
+                        <strong>Relocation Score</strong><br>
+                        ${item.relocation_score.toFixed(2)}
+                    </div>
+
+                    <div class="destination-stat suitable">
+                        ${item.suitability_level}
+                    </div>
+
+                </div>
+            `;
+
+            container.appendChild(card);
+
+        });
+
+
+        document.getElementById("results").style.display = "block";
+
+    } catch (error) {
+
+        document.getElementById("error").textContent =
+            error.message;
+
+        document.getElementById("error").style.display =
+            "block";
+
+    } finally {
+
+        document.getElementById("loading").style.display =
+            "none";
+
+    }
+}
+
+
+function getMedal(rank) {
+
+    if (rank === 1) return "🥇";
+
+    if (rank === 2) return "🥈";
+
+    if (rank === 3) return "🥉";
+
+    return "";
+
+}
+
+
+loadVillages();
+
+</script>
+
+</body>
+</html>
